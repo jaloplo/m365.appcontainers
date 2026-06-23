@@ -7,8 +7,17 @@ if (Test-Path -Path $privatePath) {
     }
 }
 
-$publicPath = Join-Path -Path $PSScriptRoot -ChildPath 'Public'
 $publicFunctions = @()
+
+$publicPath = Join-Path -Path $PSScriptRoot -ChildPath 'Public/Loop'
+if (Test-Path -Path $publicPath) {
+    Get-ChildItem -Path $publicPath -Filter '*.ps1' -File | Sort-Object Name | ForEach-Object {
+        . $_.FullName
+        $publicFunctions += [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+    }
+}
+
+$publicPath = Join-Path -Path $PSScriptRoot -ChildPath 'Public/Designer'
 if (Test-Path -Path $publicPath) {
     Get-ChildItem -Path $publicPath -Filter '*.ps1' -File | Sort-Object Name | ForEach-Object {
         . $_.FullName
