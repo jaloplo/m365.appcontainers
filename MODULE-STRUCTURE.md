@@ -31,8 +31,6 @@
 - `Public/Remove-LoopReader.ps1`: Removes a reader from a Loop container.
 - `Public/Remove-LoopWriter.ps1`: Removes a writer from a Loop container.
 - `Public/Remove-LoopManager.ps1`: Removes a manager from a Loop container.
-- `Public/Enable-LoopOfficeDocsEdition.ps1`: Enables Office document editing for a Loop container.
-- `Public/Disable-LoopOfficeDocsEdition.ps1`: Disables Office document editing for a Loop container.
 - `Public/Block-LoopDownload.ps1`: Blocks downloads for a Loop container.
 - `Public/Block-LoopDownloadExceptOwners.ps1`: Blocks downloads while allowing owners to download.
 - `Public/Unblock-LoopDownload.ps1`: Removes download restrictions from a Loop container.
