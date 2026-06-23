@@ -34,6 +34,6 @@ Add-LoopAccessControlGroup -Identity 'container-id' -GroupIdentity 'group-id'
     $updatedGroups = @($groups + $GroupIdentity)
 
     if ($PSCmdlet.ShouldProcess($Identity, "Add restricted access control group '$GroupIdentity'")) {
-        Set-SPOContainer -Identity $Identity -EnableRestrictedAccessControl $true -RestrictedAccessControlGroups $updatedGroups
+        Set-SPOContainer -Identity $Identity -RestrictedAccessControlGroupsToAdd $updatedGroups
     }
 }
