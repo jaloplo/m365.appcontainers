@@ -1,0 +1,54 @@
+# Module Structure Reference
+
+- `loop-admin.psm1`: Root module file that loads every private helper and public command, then exports the public functions.
+- `loop-admin.psd1`: PowerShell module manifest that defines metadata and the list of exported public functions.
+- `Private/`: Folder that stores internal helper functions used by the public commands.
+- `Private/Test-LoopContainer.ps1`: Checks whether a SharePoint container belongs to the Loop application.
+- `Private/Test-LoopIdentityProvided.ps1`: Determines whether a non-empty Identity parameter was supplied.
+- `Private/Get-LoopContainerBase.ps1`: Centralizes retrieval and archive-state filtering for Loop containers.
+- `Private/Invoke-LoopUserCommand.ps1`: Wraps add, set, and remove operations for container users by role.
+- `Private/Invoke-LoopContainerUpdate.ps1`: Applies container setting updates through a reusable helper with ShouldProcess support.
+- `Private/Get-LoopRestrictedAccessControlGroups.ps1`: Extracts restricted access control groups from a container object.
+- `Private/Get-LoopContainerSetting.ps1`: Returns selected Loop container settings in a standard object format.
+- `Public/`: Folder that stores the module's exported commands, one function per file.
+- `Public/Get-Loop.ps1`: Retrieves Loop containers, optionally by identity.
+- `Public/Get-DeletedLoop.ps1`: Retrieves deleted Loop containers, optionally by identity.
+- `Public/Get-LoopArchived.ps1`: Retrieves Loop containers in the Archived state.
+- `Public/Get-LoopRecentlyArchived.ps1`: Retrieves Loop containers in the RecentlyArchived state.
+- `Public/Get-LoopFullyArchived.ps1`: Retrieves Loop containers in the FullyArchived state.
+- `Public/Get-LoopReactivating.ps1`: Retrieves Loop containers in the Reactivating state.
+- `Public/Get-LoopNotArchived.ps1`: Retrieves Loop containers that are not in archived-related states.
+- `Public/Remove-Loop.ps1`: Removes an existing Loop container.
+- `Public/Add-LoopOwner.ps1`: Adds an owner to a Loop container.
+- `Public/Add-LoopReader.ps1`: Adds a reader to a Loop container.
+- `Public/Add-LoopWriter.ps1`: Adds a writer to a Loop container.
+- `Public/Add-LoopManager.ps1`: Adds a manager to a Loop container.
+- `Public/Set-LoopOwner.ps1`: Sets a user's role to owner for a Loop container.
+- `Public/Set-LoopReader.ps1`: Sets a user's role to reader for a Loop container.
+- `Public/Set-LoopWriter.ps1`: Sets a user's role to writer for a Loop container.
+- `Public/Set-LoopManager.ps1`: Sets a user's role to manager for a Loop container.
+- `Public/Remove-LoopOwner.ps1`: Removes an owner from a Loop container.
+- `Public/Remove-LoopReader.ps1`: Removes a reader from a Loop container.
+- `Public/Remove-LoopWriter.ps1`: Removes a writer from a Loop container.
+- `Public/Remove-LoopManager.ps1`: Removes a manager from a Loop container.
+- `Public/Enable-LoopOfficeDocsEdition.ps1`: Enables Office document editing for a Loop container.
+- `Public/Disable-LoopOfficeDocsEdition.ps1`: Disables Office document editing for a Loop container.
+- `Public/Block-LoopDownload.ps1`: Blocks downloads for a Loop container.
+- `Public/Block-LoopDownloadExceptOwners.ps1`: Blocks downloads while allowing owners to download.
+- `Public/Unblock-LoopDownload.ps1`: Removes download restrictions from a Loop container.
+- `Public/Enable-LoopAccessControl.ps1`: Enables restricted access control on a Loop container.
+- `Public/Disable-LoopAccessControl.ps1`: Disables restricted access control on a Loop container.
+- `Public/Add-LoopAccessControlGroup.ps1`: Adds a group to a Loop container's restricted access control configuration.
+- `Public/Remove-LoopAccessControlGroup.ps1`: Removes a group from a Loop container's restricted access control configuration.
+- `Public/Clear-LoopAccessControlGroups.ps1`: Clears all restricted access control groups from a Loop container.
+- `Public/Get-LoopPrincipalOwner.ps1`: Retrieves principal owner metadata from a Loop container.
+- `Public/Disable-LoopTenantSearch.ps1`: Disables tenant-wide search visibility for a Loop container.
+- `Public/Enable-LoopTenantSearch.ps1`: Enables tenant-wide search visibility for a Loop container.
+- `Public/Get-LoopTenantSearch.ps1`: Retrieves the tenant search setting for a Loop container.
+- `Public/Set-LoopSensitivityLabel.ps1`: Applies a sensitivity label to a Loop container.
+- `Public/Get-LoopSensitivityLabel.ps1`: Retrieves the sensitivity label configuration from a Loop container.
+- `Public/Remove-LoopSensitivityLabel.ps1`: Removes the sensitivity label from a Loop container.
+- `Public/Allow-LoopSharingDomains.ps1`: Configures an allow list of sharing domains for a Loop container.
+- `Public/Block-LoopSharingDomains.ps1`: Configures a block list of sharing domains for a Loop container.
+- `Public/Get-LoopSharingDomains.ps1`: Retrieves sharing domain restriction settings for a Loop container.
+- `Public/Disable-LoopSharingDomains.ps1`: Removes sharing domain restrictions from a Loop container.
