@@ -19,7 +19,7 @@ Get-Designer -Identity 'container-id'
         [string]$Identity
     )
 
-    if (Test-LoopIdentityProvided -Identity $Identity) {
+    if (Test-DesignerIdentityProvided -Identity $Identity) {
         Get-DesignerContainerBase -Identity $Identity
         return
     }
