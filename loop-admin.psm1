@@ -128,7 +128,7 @@ Get-DeletedLoop -Identity 'container-id'
         return $container
     }
 
-    Get-SPODeletedContainer | Where-Object { $_.OwningApplicationName -eq 'Loop' }
+    Get-SPODeletedContainer | Where-Object { (Get-SPODeletedContainer -Identity $_.ContainerId).OwningApplicationName -eq 'Loop' }
 }
 
 function Get-LoopArchived {
@@ -344,6 +344,107 @@ function Invoke-LoopUserCommand {
     }
 }
 
+function Invoke-LoopContainerUpdate {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Settings,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ActionDescription
+    )
+
+    $container = Get-LoopContainerBase -Identity $Identity
+    if ($null -eq $container) {
+        throw "Loop container '$Identity' was not found."
+    }
+
+    if ($PSCmdlet.ShouldProcess($Identity, $ActionDescription)) {
+        $parameters = @{ Identity = $Identity }
+        foreach ($key in $Settings.Keys) {
+            $parameters[$key] = $Settings[$key]
+        }
+
+        Set-SPOContainer @parameters
+    }
+}
+
+function Get-LoopRestrictedAccessControlGroups {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        $Container
+    )
+
+    $candidateProperties = @(
+        'RestrictedAccessControlGroups',
+        'RestrictedAccessControlGroupIds',
+        'RestrictedAccessControl',
+        'RestrictedAccessControlEntries'
+    )
+
+    foreach ($propertyName in $candidateProperties) {
+        if ($Container.PSObject.Properties.Name -contains $propertyName) {
+            $value = $Container.$propertyName
+            if ($null -eq $value) {
+                return @()
+            }
+
+            if ($value -is [System.Array]) {
+                return @($value)
+            }
+
+            return @($value)
+        }
+    }
+
+    return @()
+}
+
+function Get-LoopContainerSetting {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$PropertyNames,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$DisplayName
+    )
+
+    $container = Get-LoopContainerBase -Identity $Identity
+    if ($null -eq $container) {
+        throw "Loop container '$Identity' was not found."
+    }
+
+    $result = [ordered]@{
+        Identity = $Identity
+        Setting = $DisplayName
+    }
+
+    foreach ($propertyName in $PropertyNames) {
+        if ($container.PSObject.Properties.Name -contains $propertyName) {
+            $result[$propertyName] = $container.$propertyName
+        }
+    }
+
+    if ($result.Count -le 2) {
+        $result['Value'] = $null
+    }
+
+    [pscustomobject]$result
+}
+
 function Add-LoopOwner {
 <#
 .SYNOPSIS
@@ -536,6 +637,482 @@ Remove-LoopManager -Identity 'container-id' -User 'user@contoso.com'
     Invoke-LoopUserCommand -Action Remove -Role Manager -Identity $Identity -User $User
 }
 
+function Enable-LoopOfficeDocsEdition {
+<#
+.SYNOPSIS
+Enables Office document editing for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Enable-LoopOfficeDocsEdition -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ AllowEditing = $true } -ActionDescription 'Enable Loop Office document editing'
+}
+
+function Disable-LoopOfficeDocsEdition {
+<#
+.SYNOPSIS
+Disables Office document editing for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Disable-LoopOfficeDocsEdition -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ AllowEditing = $false } -ActionDescription 'Disable Loop Office document editing'
+}
+
+function Block-LoopDownload {
+<#
+.SYNOPSIS
+Blocks downloads for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Block-LoopDownload -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ BlockDownloadPolicy = $true; ExcludeBlockDownloadPolicyContainerOwners = $false } -ActionDescription 'Block Loop container downloads'
+}
+
+function Block-LoopDownloadExceptOwners {
+<#
+.SYNOPSIS
+Blocks downloads for a Loop container except for container owners.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Block-LoopDownloadExceptOwners -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ BlockDownloadPolicy = $true; ExcludeBlockDownloadPolicyContainerOwners = $true } -ActionDescription 'Block Loop container downloads except for owners'
+}
+
+function Unblock-LoopDownload {
+<#
+.SYNOPSIS
+Removes download restrictions from a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Unblock-LoopDownload -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ BlockDownloadPolicy = $false } -ActionDescription 'Unblock Loop container downloads'
+}
+
+function Enable-LoopAccessControl {
+<#
+.SYNOPSIS
+Enables restricted access control for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Enable-LoopAccessControl -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ EnableRestrictedAccessControl = $true } -ActionDescription 'Enable Loop restricted access control'
+}
+
+function Disable-LoopAccessControl {
+<#
+.SYNOPSIS
+Disables restricted access control for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Disable-LoopAccessControl -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ EnableRestrictedAccessControl = $false } -ActionDescription 'Disable Loop restricted access control'
+}
+
+function Add-LoopAccessControlGroup {
+<#
+.SYNOPSIS
+Adds a group to the restricted access control list for a Loop container.
+.PARAMETER Identity
+The container identity.
+.PARAMETER GroupIdentity
+The group identifier to add.
+.EXAMPLE
+Add-LoopAccessControlGroup -Identity 'container-id' -GroupIdentity 'group-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('GroupId')]
+        [string]$GroupIdentity
+    )
+
+    $container = Get-LoopContainerBase -Identity $Identity
+    if ($null -eq $container) {
+        throw "Loop container '$Identity' was not found."
+    }
+
+    $groups = @(Get-LoopRestrictedAccessControlGroups -Container $container)
+    if ($GroupIdentity -in $groups) {
+        return $container
+    }
+
+    $updatedGroups = @($groups + $GroupIdentity)
+
+    if ($PSCmdlet.ShouldProcess($Identity, "Add restricted access control group '$GroupIdentity'")) {
+        Set-SPOContainer -Identity $Identity -EnableRestrictedAccessControl $true -RestrictedAccessControlGroups $updatedGroups
+    }
+}
+
+function Remove-LoopAccessControlGroup {
+<#
+.SYNOPSIS
+Removes a group from the restricted access control list for a Loop container.
+.PARAMETER Identity
+The container identity.
+.PARAMETER GroupIdentity
+The group identifier to remove.
+.EXAMPLE
+Remove-LoopAccessControlGroup -Identity 'container-id' -GroupIdentity 'group-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [Alias('GroupId')]
+        [string]$GroupIdentity
+    )
+
+    $container = Get-LoopContainerBase -Identity $Identity
+    if ($null -eq $container) {
+        throw "Loop container '$Identity' was not found."
+    }
+
+    $groups = @(Get-LoopRestrictedAccessControlGroups -Container $container)
+    $updatedGroups = @($groups | Where-Object { $_ -ne $GroupIdentity })
+
+    if ($updatedGroups.Count -eq $groups.Count) {
+        return $container
+    }
+
+    if ($PSCmdlet.ShouldProcess($Identity, "Remove restricted access control group '$GroupIdentity'")) {
+        Set-SPOContainer -Identity $Identity -EnableRestrictedAccessControl $true -RestrictedAccessControlGroups $updatedGroups
+    }
+}
+
+function Clear-LoopAccessControlGroups {
+<#
+.SYNOPSIS
+Clears all restricted access control groups from a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Clear-LoopAccessControlGroups -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ ClearRestrictedAccessControl = $true } -ActionDescription 'Clear Loop restricted access control groups'
+}
+
+function Get-LoopPrincipalOwner {
+<#
+.SYNOPSIS
+Gets the current principal owner metadata for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Get-LoopPrincipalOwner -Identity 'container-id'
+#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    $container = Get-LoopContainerBase -Identity $Identity
+    if ($null -eq $container) {
+        throw "Loop container '$Identity' was not found."
+    }
+
+    $candidateProperties = @(
+        'PrincipalOwner',
+        'CurrentPrincipalOwner',
+        'PrincipalOwnerMetadata'
+    )
+
+    foreach ($propertyName in $candidateProperties) {
+        if ($container.PSObject.Properties.Name -contains $propertyName) {
+            return $container.$propertyName
+        }
+    }
+
+    return $container | Select-Object -Property *Owner*
+}
+
+function Disable-LoopTenantSearch {
+<#
+.SYNOPSIS
+Restricts tenant-wide search visibility for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Disable-LoopTenantSearch -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ RestrictContentOrgWideSearch = $true } -ActionDescription 'Disable Loop tenant search visibility'
+}
+
+function Enable-LoopTenantSearch {
+<#
+.SYNOPSIS
+Enables tenant-wide search visibility for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Enable-LoopTenantSearch -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ RestrictContentOrgWideSearch = $false } -ActionDescription 'Enable Loop tenant search visibility'
+}
+
+function Get-LoopTenantSearch {
+<#
+.SYNOPSIS
+Gets the current tenant search configuration for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Get-LoopTenantSearch -Identity 'container-id'
+#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Get-LoopContainerSetting -Identity $Identity -PropertyNames @('RestrictContentOrgWideSearch') -DisplayName 'TenantSearch'
+}
+
+function Set-LoopSensitivityLabel {
+<#
+.SYNOPSIS
+Sets a sensitivity label for a Loop container.
+.PARAMETER Identity
+The container identity.
+.PARAMETER SensitivityLabel
+The label GUID or name.
+.EXAMPLE
+Set-LoopSensitivityLabel -Identity 'container-id' -SensitivityLabel 'label-guid-or-name'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$SensitivityLabel
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ SensitivityLabel = $SensitivityLabel } -ActionDescription 'Set Loop sensitivity label'
+}
+
+function Get-LoopSensitivityLabel {
+<#
+.SYNOPSIS
+Gets the configured sensitivity label for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Get-LoopSensitivityLabel -Identity 'container-id'
+#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Get-LoopContainerSetting -Identity $Identity -PropertyNames @('SensitivityLabel','SensitivityLabelId','LabelId') -DisplayName 'SensitivityLabel'
+}
+
+function Remove-LoopSensitivityLabel {
+<#
+.SYNOPSIS
+Removes the sensitivity label from a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Remove-LoopSensitivityLabel -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ RemoveLabel = $true } -ActionDescription 'Remove Loop sensitivity label'
+}
+
+function Allow-LoopSharingDomains {
+<#
+.SYNOPSIS
+Allows sharing only with the specified domains for a Loop container.
+.PARAMETER Identity
+The container identity.
+.PARAMETER Domains
+The list of allowed domains.
+.EXAMPLE
+Allow-LoopSharingDomains -Identity 'container-id' -Domains 'contoso.com','fabrikam.com'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Domains
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ SharingDomainRestrictionMode = 'AllowList'; SharingAllowedDomainList = $Domains -join " " } -ActionDescription 'Allow Loop sharing only for specified domains'
+}
+
+function Block-LoopSharingDomains {
+<#
+.SYNOPSIS
+Blocks sharing with the specified domains for a Loop container.
+.PARAMETER Identity
+The container identity.
+.PARAMETER Domains
+The list of blocked domains.
+.EXAMPLE
+Block-LoopSharingDomains -Identity 'container-id' -Domains 'contoso.com','fabrikam.com'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Domains
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ SharingDomainRestrictionMode = 'BlockList'; SharingBlockedDomainList = $Domains -join " " } -ActionDescription 'Block Loop sharing for specified domains'
+}
+
+function Get-LoopSharingDomains {
+<#
+.SYNOPSIS
+Gets the current sharing domain configuration for a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Get-LoopSharingDomains -Identity 'container-id'
+#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Get-LoopContainerSetting -Identity $Identity -PropertyNames @('SharingDomainRestrictionMode','SharingAllowedDomainList','SharingBlockedDomainList') -DisplayName 'SharingDomains'
+}
+
+function Disable-LoopSharingDomains {
+<#
+.SYNOPSIS
+Removes sharing domain restrictions from a Loop container.
+.PARAMETER Identity
+The container identity.
+.EXAMPLE
+Disable-LoopSharingDomains -Identity 'container-id'
+#>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Identity
+    )
+
+    Invoke-LoopContainerUpdate -Identity $Identity -Settings @{ SharingDomainRestrictionMode = 'None'; SharingAllowedDomainList = ""; SharingBlockedDomainList = "" } -ActionDescription 'Disable Loop sharing domain restrictions'
+}
+
 Export-ModuleMember -Function @(
     'Get-Loop',
     'Get-DeletedLoop',
@@ -556,5 +1133,26 @@ Export-ModuleMember -Function @(
     'Remove-LoopOwner',
     'Remove-LoopReader',
     'Remove-LoopWriter',
-    'Remove-LoopManager'
+    'Remove-LoopManager',
+    'Enable-LoopOfficeDocsEdition', # check
+    'Disable-LoopOfficeDocsEdition', # check
+    'Block-LoopDownload',
+    'Block-LoopDownloadExceptOwners',
+    'Unblock-LoopDownload',
+    'Enable-LoopAccessControl', # check
+    'Disable-LoopAccessControl', # check
+    'Add-LoopAccessControlGroup', # check
+    'Remove-LoopAccessControlGroup', # check
+    'Clear-LoopAccessControlGroups', # check
+    'Get-LoopPrincipalOwner',
+    'Disable-LoopTenantSearch',
+    'Enable-LoopTenantSearch',
+    'Get-LoopTenantSearch',
+    'Set-LoopSensitivityLabel',
+    'Get-LoopSensitivityLabel',
+    'Remove-LoopSensitivityLabel',
+    'Allow-LoopSharingDomains',
+    'Block-LoopSharingDomains',
+    'Get-LoopSharingDomains',
+    'Disable-LoopSharingDomains'
 )
