@@ -1,15 +1,15 @@
-function Add-LoopManager {
+function Remove-DesignerReader {
 <#
 .SYNOPSIS
-Adds a manager to a Loop container.
+Removes a reader from a Designer container.
 .PARAMETER Identity
 The container identity.
 .PARAMETER User
 The user email address.
 .EXAMPLE
-Add-LoopManager -Identity 'container-id' -User 'user@contoso.com'
+Remove-DesignerReader -Identity 'container-id' -User 'user@contoso.com'
 #>
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$Identity,[Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]$User)
-    Invoke-LoopUserCommand -Action Add -Role Manager -Identity $Identity -User $User
+    Invoke-DesignerUserCommand -Action Remove -Role Reader -Identity $Identity -User $User
 }

@@ -1,5 +1,5 @@
 function Add-LoopOwner {
-<#!
+<#
 .SYNOPSIS
 Adds an owner to a Loop container.
 .PARAMETER Identity

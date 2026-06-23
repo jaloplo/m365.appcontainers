@@ -1,5 +1,5 @@
 function Add-LoopWriter {
-<#!
+<#
 .SYNOPSIS
 Adds a writer to a Loop container.
 .PARAMETER Identity

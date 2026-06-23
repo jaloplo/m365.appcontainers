@@ -1,5 +1,5 @@
 function Add-LoopReader {
-<#!
+<#
 .SYNOPSIS
 Adds a reader to a Loop container.
 .PARAMETER Identity
