@@ -25,6 +25,14 @@ if (Test-Path -Path $publicPath) {
     }
 }
 
+$publicPath = Join-Path -Path $PSScriptRoot -ChildPath 'Public/Newsletter'
+if (Test-Path -Path $publicPath) {
+    Get-ChildItem -Path $publicPath -Filter '*.ps1' -File | Sort-Object Name | ForEach-Object {
+        . $_.FullName
+        $publicFunctions += [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+    }
+}
+
 if ($publicFunctions.Count -gt 0) {
     Export-ModuleMember -Function $publicFunctions
 }
