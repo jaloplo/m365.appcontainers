@@ -5,7 +5,7 @@
     Author = 'Jaime López Lóez'
     CompanyName = ''
     Copyright = ''
-    Description = 'SharePoint Online Loop and Designer administration module.'
+    Description = 'SharePoint Online Loop, Designer, and Outlook Newsletters administration module.'
     PowerShellVersion = '5.1'
     FunctionsToExport = @(
         'Add-LoopAccessControlGroup',
@@ -85,17 +85,56 @@
         'Set-DesignerReader',
         'Set-DesignerSensitivityLabel',
         'Set-DesignerWriter',
-        'Unblock-DesignerDownload'
+        'Unblock-DesignerDownload',
+        'Add-NewsletterAccessControlGroup',
+        'Add-NewsletterManager',
+        'Add-NewsletterOwner',
+        'Add-NewsletterReader',
+        'Add-NewsletterWriter',
+        'Allow-NewsletterSharingDomains',
+        'Block-NewsletterDownload',
+        'Block-NewsletterDownloadExceptOwners',
+        'Block-NewsletterSharingDomains',
+        'Clear-NewsletterAccessControlGroups',
+        'Disable-NewsletterAccessControl',
+        'Disable-NewsletterSharingDomains',
+        'Disable-NewsletterTenantSearch',
+        'Enable-NewsletterAccessControl',
+        'Enable-NewsletterTenantSearch',
+        'Get-DeletedNewsletter',
+        'Get-Newsletter',
+        'Get-NewsletterArchived',
+        'Get-NewsletterFullyArchived',
+        'Get-NewsletterNotArchived',
+        'Get-NewsletterPrincipalOwner',
+        'Get-NewsletterReactivating',
+        'Get-NewsletterRecentlyArchived',
+        'Get-NewsletterSensitivityLabel',
+        'Get-NewsletterSharingDomains',
+        'Get-NewsletterTenantSearch',
+        'Remove-Newsletter',
+        'Remove-NewsletterAccessControlGroup',
+        'Remove-NewsletterManager',
+        'Remove-NewsletterOwner',
+        'Remove-NewsletterReader',
+        'Remove-NewsletterSensitivityLabel',
+        'Remove-NewsletterWriter',
+        'Set-NewsletterManager',
+        'Set-NewsletterOwner',
+        'Set-NewsletterReader',
+        'Set-NewsletterSensitivityLabel',
+        'Set-NewsletterWriter',
+        'Unblock-NewsletterDownload'
     )
     CmdletsToExport = @()
     VariablesToExport = @()
     AliasesToExport = @()
     PrivateData = @{
         PSData = @{
-            Tags = @('PowerShell', 'SharePoint', 'Loop', 'Designer', 'SPO')
+            Tags = @('PowerShell', 'SharePoint', 'Loop', 'Designer', 'Newsletters', 'SPO')
             ProjectUri = ''
             LicenseUri = ''
-            ReleaseNotes = 'Updated manifest to match current module structure and exported Loop and Designer functions.'
+            ReleaseNotes = 'Updated manifest to match current module structure and exported Loop, Designer, and Outlook Newsletters functions.'
         }
     }
 }
