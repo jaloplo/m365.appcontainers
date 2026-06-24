@@ -1,126 +1,112 @@
-# loop-admin
-
-PowerShell module for Microsoft 365 IT administrators to manage Loop containers and container users through concise wrappers around SharePoint Online Management Shell cmdlets.
+# PowerShell Module
 
 ## Overview
+This PowerShell module helps organizations automate routine tasks, standardize operational processes, and improve technician efficiency. It is designed for both business stakeholders who need a clear understanding of value and outcomes, and technical users who need practical guidance for installation, usage, and maintenance.
 
-`loop-admin` provides short, self-explanatory commands to:
+## For Business Stakeholders
 
-- Discover Loop containers
-- Filter Loop containers by archive state
-- Remove Loop containers
-- Add, set, and remove container users by role
+### What this module provides
+- Automates repetitive administrative and operational tasks
+- Reduces manual effort and human error
+- Improves consistency across teams and environments
+- Supports faster service delivery and issue resolution
+- Helps document and standardize internal processes
 
-The module is designed as a thin wrapper over SharePoint Online Management Shell cmdlets and returns standard SharePoint Online objects whenever the underlying cmdlets do so.
+### Business benefits
+- **Efficiency:** Saves time by automating common workflows
+- **Reliability:** Ensures tasks are executed the same way every time
+- **Scalability:** Makes it easier to support more users, systems, or customers
+- **Visibility:** Encourages repeatable processes that are easier to audit and report on
+- **Cost control:** Reduces overhead associated with manual operations
 
-## Prerequisites
+### Typical use cases
+- User and system administration
+- Environment setup and configuration
+- Reporting and data collection
+- Scheduled maintenance tasks
+- Integration with internal tools and scripts
 
-- SharePoint Online Management Shell installed
-- Existing tenant connection established with `Connect-SPOService`
+## For Technicians
 
-## Loop detection rule
+### Prerequisites
+- Windows PowerShell 5.1 or PowerShell 7+
+- Appropriate execution policy to run scripts and modules
+- Required permissions for the systems or services the module manages
 
-Loop containers are identified by:
-
-- `OwningApplicationName -eq 'Loop'`
-
-When an `Identity` parameter is used, the module first retrieves the container through `Get-SPOContainer -Identity` and then evaluates whether the returned container belongs to Loop.
-
-## Commands by activity
-
-### Container
-
-- `Get-Loop`
-- `Get-LoopArchived`
-- `Get-LoopRecentlyArchived`
-- `Get-LoopFullyArchived`
-- `Get-LoopReactivating`
-- `Get-LoopNotArchived`
-- `Remove-Loop`
-
-### Users
-
-#### Add
-- `Add-LoopOwner`
-- `Add-LoopReader`
-- `Add-LoopWriter`
-- `Add-LoopManager`
-
-#### Set
-- `Set-LoopOwner`
-- `Set-LoopReader`
-- `Set-LoopWriter`
-- `Set-LoopManager`
-
-#### Remove
-- `Remove-LoopOwner`
-- `Remove-LoopReader`
-- `Remove-LoopWriter`
-- `Remove-LoopManager`
-
-## Examples
-
-### List all Loop containers
+### Installation
+If the module is published locally or internally:
 
 ```powershell
-Get-Loop
+Import-Module .\YourModuleName.psm1
 ```
 
-### Get one Loop container
+If installed from a module path:
 
 ```powershell
-Get-Loop -Identity 'container-id'
+Import-Module YourModuleName
 ```
 
-### List archived Loop containers
+To verify the module loaded successfully:
 
 ```powershell
-Get-LoopArchived
+Get-Module YourModuleName
 ```
 
-### Remove a Loop container
+### Common commands
+List available commands in the module:
 
 ```powershell
-Remove-Loop -Identity 'container-id'
+Get-Command -Module YourModuleName
 ```
 
-### Add a writer to a Loop container
+Get help for a specific command:
 
 ```powershell
-Add-LoopWriter -Identity 'container-id' -User 'user@contoso.com'
+Get-Help Your-Command -Full
 ```
 
-### Set a manager in a Loop container
-
+### Example workflow
 ```powershell
-Set-LoopManager -Identity 'container-id' -User 'manager@contoso.com'
+Import-Module YourModuleName
+Get-Command -Module YourModuleName
+# Run a module command
+Your-Command -Parameter Value
 ```
 
-### Remove a reader from a Loop container
+### Operational guidance
+- Run commands first in a test environment when possible
+- Use verbose logging for troubleshooting
+- Validate permissions before execution
+- Review output and error handling in automation jobs
+- Document any environment-specific dependencies
 
-```powershell
-Remove-LoopReader -Identity 'container-id' -User 'user@contoso.com'
-```
+### Troubleshooting
+**Module does not load**
+- Confirm the module file path is correct
+- Verify the module name matches the file/folder structure
+- Check execution policy settings
 
-## Suggested structure for future extension
+**Commands are missing**
+- Ensure exported functions are defined correctly
+- Re-import the module after updates
+- Use `Get-Command -Module YourModuleName` to confirm availability
 
-```text
-loop-admin/
-├── loop-admin.psm1
-├── README.md
-├── reasoning.md
-├── container/
-│   ├── Get-Loop.ps1
-│   ├── Get-LoopArchived.ps1
-│   ├── Get-LoopRecentlyArchived.ps1
-│   ├── Get-LoopFullyArchived.ps1
-│   ├── Get-LoopReactivating.ps1
-│   ├── Get-LoopNotArchived.ps1
-│   └── Remove-Loop.ps1
-└── users/
-    ├── add/
-    ├── set/
-    └── remove/
-```
+**Permission errors**
+- Run the shell with the required privileges
+- Confirm access to target systems, APIs, or file paths
 
-This release keeps implementation in a single module file for portability, while the documented layout shows how commands can be split into independent files by activity in a future refactor.
+## Maintenance and Support
+- Keep the module versioned and documented
+- Test updates before production use
+- Maintain a changelog for enhancements and fixes
+- Store the module in a controlled repository for team access
+
+## Customization
+Replace `YourModuleName` and `Your-Command` with the actual module and command names. You can expand this README with:
+- Feature-specific examples
+- Parameter reference documentation
+- Environment requirements
+- Internal ownership and support contacts
+
+## Summary
+This module is intended to bridge business value and technical execution. Business users can understand why it matters, while technicians can quickly install, use, and support it.
